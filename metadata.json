@@ -1,0 +1,8 @@
+{
+  "name": "Resr mp",
+  "description": "유튜브 검색, URL/재생목록 가져오기, 미디어 세션 제어 및 백그라운드 재생을 지원하는 PWA 음악 플레이어",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

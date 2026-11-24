@@ -1,0 +1,293 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Global safety net: default deny
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    function isSignedIn() {
+      return request.auth != null && request.auth.token.email_verified == true;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() >= 1 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function isValidTrackId(id) {
+      return id is string && id.size() >= 1 && id.size() <= 64 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function hasValidClipBounds(data) {
+      return (!('startSeconds' in data) || (data.startSeconds is number && data.startSeconds >= 0 && data.startSeconds <= 864000))
+        && (!('endSeconds' in data) || (data.endSeconds is number && data.endSeconds >= 0 && data.endSeconds <= 864000))
+        && (!('startSeconds' in data) || !('endSeconds' in data) || data.endSeconds > data.startSeconds)
+        && (!('clipLabel' in data) || (data.clipLabel is string && data.clipLabel.size() <= 80));
+    }
+
+    function isValidUserSettings(data, userId) {
+      return data.keys().hasAll(['uid', 'repeatMode', 'isShuffle', 'backgroundKeepAlive', 'createdAt', 'updatedAt'])
+        && data.keys().hasOnly(['uid', 'displayName', 'repeatMode', 'isShuffle', 'backgroundKeepAlive', 'createdAt', 'updatedAt'])
+        && data.uid is string
+        && data.uid == userId
+        && data.uid == request.auth.uid
+        && (!('displayName' in data) || (data.displayName is string && data.displayName.size() <= 120))
+        && data.repeatMode in ['off', 'all', 'one']
+        && data.isShuffle is bool
+        && data.backgroundKeepAlive is bool
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    function isValidLikedTrack(data, userId, entryId) {
+      return data.keys().hasAll(['entryId', 'id', 'ownerId', 'title', 'channel', 'duration', 'durationSeconds', 'thumbnail', 'addedAt'])
+        && data.keys().hasOnly(['entryId', 'id', 'ownerId', 'title', 'channel', 'duration', 'durationSeconds', 'thumbnail', 'viewCountText', 'startSeconds', 'endSeconds', 'clipLabel', 'source', 'addedAt'])
+        && isValidId(data.entryId)
+        && data.entryId == entryId
+        && isValidTrackId(data.id)
+        && data.ownerId is string
+        && data.ownerId == userId
+        && data.ownerId == request.auth.uid
+        && data.title is string && data.title.size() >= 1 && data.title.size() <= 300
+        && data.channel is string && data.channel.size() >= 1 && data.channel.size() <= 150
+        && data.duration is string && data.duration.size() <= 20
+        && data.durationSeconds is number && data.durationSeconds >= 0 && data.durationSeconds <= 864000
+        && data.thumbnail is string && data.thumbnail.size() <= 500
+        && (!('viewCountText' in data) || (data.viewCountText is string && data.viewCountText.size() <= 60))
+        && (!('source' in data) || data.source in ['youtube', 'local'])
+        && hasValidClipBounds(data)
+        && data.addedAt is timestamp;
+    }
+
+    function isValidPlaylist(data, userId, playlistId) {
+      return data.keys().hasAll(['id', 'ownerId', 'name', 'createdAt', 'updatedAt'])
+        && data.keys().hasOnly(['id', 'ownerId', 'name', 'createdAt', 'updatedAt'])
+        && isValidId(data.id)
+        && data.id == playlistId
+        && data.ownerId is string
+        && data.ownerId == userId
+        && data.ownerId == request.auth.uid
+        && data.name is string && data.name.size() >= 1 && data.name.size() <= 100
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    function isValidPlaylistTrack(data, userId, playlistId, entryId) {
+      return data.keys().hasAll(['entryId', 'id', 'ownerId', 'playlistId', 'title', 'channel', 'duration', 'durationSeconds', 'thumbnail', 'orderIndex', 'addedAt'])
+        && data.keys().hasOnly(['entryId', 'id', 'ownerId', 'playlistId', 'title', 'channel', 'duration', 'durationSeconds', 'thumbnail', 'viewCountText', 'startSeconds', 'endSeconds', 'clipLabel', 'source', 'orderIndex', 'addedAt'])
+        && isValidId(data.entryId)
+        && data.entryId == entryId
+        && isValidTrackId(data.id)
+        && data.ownerId is string
+        && data.ownerId == userId
+        && data.ownerId == request.auth.uid
+        && isValidId(data.playlistId)
+        && data.playlistId == playlistId
+        && data.title is string && data.title.size() >= 1 && data.title.size() <= 300
+        && data.channel is string && data.channel.size() >= 1 && data.channel.size() <= 150
+        && data.duration is string && data.duration.size() <= 20
+        && data.durationSeconds is number && data.durationSeconds >= 0 && data.durationSeconds <= 864000
+        && data.thumbnail is string && data.thumbnail.size() <= 500
+        && (!('viewCountText' in data) || (data.viewCountText is string && data.viewCountText.size() <= 60))
+        && (!('source' in data) || data.source in ['youtube', 'local'])
+        && hasValidClipBounds(data)
+        && data.orderIndex is number && data.orderIndex >= 0
+        && data.addedAt is timestamp;
+    }
+
+    function isValidSearchHistory(data, userId, historyId) {
+      return data.keys().hasAll(['id', 'ownerId', 'query', 'searchType', 'createdAt', 'updatedAt'])
+        && data.keys().hasOnly(['id', 'ownerId', 'query', 'searchType', 'createdAt', 'updatedAt'])
+        && isValidId(data.id)
+        && data.id == historyId
+        && data.ownerId is string
+        && data.ownerId == userId
+        && data.ownerId == request.auth.uid
+        && data.query is string && data.query.size() >= 1 && data.query.size() <= 200
+        && data.searchType in ['keyword', 'channel', 'url']
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    function isValidPlayHistory(data, userId, trackId) {
+      return data.keys().hasAll(['id', 'ownerId', 'title', 'channel', 'duration', 'durationSeconds', 'thumbnail', 'playCount', 'createdAt', 'lastPlayedAt'])
+        && data.keys().hasOnly(['id', 'ownerId', 'title', 'channel', 'duration', 'durationSeconds', 'thumbnail', 'playCount', 'createdAt', 'lastPlayedAt'])
+        && isValidTrackId(data.id)
+        && data.id == trackId
+        && data.ownerId is string
+        && data.ownerId == userId
+        && data.ownerId == request.auth.uid
+        && data.title is string && data.title.size() >= 1 && data.title.size() <= 300
+        && data.channel is string && data.channel.size() >= 1 && data.channel.size() <= 150
+        && data.duration is string && data.duration.size() <= 20
+        && data.durationSeconds is number && data.durationSeconds >= 0 && data.durationSeconds <= 864000
+        && data.thumbnail is string && data.thumbnail.size() <= 500
+        && data.playCount is number && data.playCount >= 1 && data.playCount <= 100000
+        && data.createdAt is timestamp
+        && data.lastPlayedAt is timestamp;
+    }
+
+    function isValidPersonalTrack(data, userId, trackId) {
+      return data.keys().hasAll(['id', 'ownerId', 'title', 'channel', 'duration', 'durationSeconds', 'thumbnail', 'source', 'fileName', 'fileSize', 'createdAt'])
+        && data.keys().hasOnly(['id', 'ownerId', 'title', 'channel', 'duration', 'durationSeconds', 'thumbnail', 'source', 'fileName', 'fileSize', 'createdAt'])
+        && isValidTrackId(data.id)
+        && data.id == trackId
+        && data.ownerId is string
+        && data.ownerId == userId
+        && data.ownerId == request.auth.uid
+        && data.title is string && data.title.size() >= 1 && data.title.size() <= 300
+        && data.channel is string && data.channel.size() >= 1 && data.channel.size() <= 150
+        && data.duration is string && data.duration.size() <= 20
+        && data.durationSeconds is number && data.durationSeconds >= 0 && data.durationSeconds <= 864000
+        && data.thumbnail is string && data.thumbnail.size() <= 500
+        && data.source == 'local'
+        && data.fileName is string && data.fileName.size() >= 1 && data.fileName.size() <= 260
+        && data.fileSize is number && data.fileSize >= 0 && data.fileSize <= 1073741824
+        && data.createdAt is timestamp;
+    }
+
+    match /users/{userId} {
+      allow get: if isOwner(userId) && isValidId(userId);
+      allow list: if false;
+      allow create: if isOwner(userId)
+        && isValidId(userId)
+        && isValidUserSettings(incoming(), userId)
+        && incoming().createdAt == request.time
+        && incoming().updatedAt == request.time;
+      allow update: if isOwner(userId)
+        && isValidId(userId)
+        && isValidUserSettings(incoming(), userId)
+        && incoming().uid == existing().uid
+        && incoming().createdAt == existing().createdAt
+        && incoming().updatedAt == request.time
+        && incoming().diff(existing()).affectedKeys().hasOnly(['displayName', 'repeatMode', 'isShuffle', 'backgroundKeepAlive', 'updatedAt']);
+      allow delete: if isOwner(userId) && isValidId(userId);
+
+      match /likedTracks/{entryId} {
+        allow get: if isOwner(userId) && isValidId(entryId);
+        allow list: if isOwner(userId) && existing().ownerId == request.auth.uid;
+        allow create: if isOwner(userId)
+          && isValidId(entryId)
+          && isValidLikedTrack(incoming(), userId, entryId)
+          && incoming().addedAt == request.time;
+        allow update: if false;
+        allow delete: if isOwner(userId) && isValidId(entryId);
+      }
+
+      match /playlists/{playlistId} {
+        allow get: if isOwner(userId) && isValidId(playlistId);
+        allow list: if isOwner(userId) && existing().ownerId == request.auth.uid;
+        allow create: if isOwner(userId)
+          && isValidId(playlistId)
+          && isValidPlaylist(incoming(), userId, playlistId)
+          && incoming().createdAt == request.time
+          && incoming().updatedAt == request.time;
+        allow update: if isOwner(userId)
+          && isValidId(playlistId)
+          && isValidPlaylist(incoming(), userId, playlistId)
+          && incoming().id == existing().id
+          && incoming().ownerId == existing().ownerId
+          && incoming().createdAt == existing().createdAt
+          && incoming().updatedAt == request.time
+          && incoming().diff(existing()).affectedKeys().hasOnly(['name', 'updatedAt']);
+        allow delete: if isOwner(userId) && isValidId(playlistId);
+
+        match /tracks/{entryId} {
+          allow get: if isOwner(userId) && isValidId(playlistId) && isValidId(entryId);
+          allow list: if isOwner(userId) && existing().ownerId == request.auth.uid;
+          allow create: if isOwner(userId)
+            && isValidId(playlistId)
+            && isValidId(entryId)
+            && isValidPlaylistTrack(incoming(), userId, playlistId, entryId)
+            && incoming().addedAt == request.time
+            && existsAfter(/databases/$(database)/documents/users/$(userId)/playlists/$(playlistId))
+            && getAfter(/databases/$(database)/documents/users/$(userId)/playlists/$(playlistId)).data.ownerId == request.auth.uid;
+          allow update: if isOwner(userId)
+            && isValidId(playlistId)
+            && isValidId(entryId)
+            && isValidPlaylistTrack(incoming(), userId, playlistId, entryId)
+            && incoming().entryId == existing().entryId
+            && incoming().id == existing().id
+            && incoming().ownerId == existing().ownerId
+            && incoming().playlistId == existing().playlistId
+            && incoming().addedAt == existing().addedAt
+            && incoming().diff(existing()).affectedKeys().hasOnly(['orderIndex', 'startSeconds', 'endSeconds', 'clipLabel']);
+          allow delete: if isOwner(userId) && isValidId(playlistId) && isValidId(entryId);
+        }
+      }
+
+      match /searchHistory/{historyId} {
+        allow get: if isOwner(userId) && isValidId(historyId);
+        allow list: if isOwner(userId) && existing().ownerId == request.auth.uid;
+        allow create: if isOwner(userId)
+          && isValidId(historyId)
+          && isValidSearchHistory(incoming(), userId, historyId)
+          && incoming().createdAt == request.time
+          && incoming().updatedAt == request.time;
+        allow update: if isOwner(userId)
+          && isValidId(historyId)
+          && isValidSearchHistory(incoming(), userId, historyId)
+          && incoming().id == existing().id
+          && incoming().ownerId == existing().ownerId
+          && incoming().createdAt == existing().createdAt
+          && incoming().updatedAt == request.time
+          && incoming().diff(existing()).affectedKeys().hasOnly(['query', 'searchType', 'updatedAt']);
+        allow delete: if isOwner(userId) && isValidId(historyId);
+      }
+
+      match /playHistory/{trackId} {
+        allow get: if isOwner(userId) && isValidTrackId(trackId);
+        allow list: if isOwner(userId) && existing().ownerId == request.auth.uid;
+        allow create: if isOwner(userId)
+          && isValidTrackId(trackId)
+          && isValidPlayHistory(incoming(), userId, trackId)
+          && incoming().playCount == 1
+          && incoming().createdAt == request.time
+          && incoming().lastPlayedAt == request.time;
+        allow update: if isOwner(userId)
+          && isValidTrackId(trackId)
+          && isValidPlayHistory(incoming(), userId, trackId)
+          && incoming().id == existing().id
+          && incoming().ownerId == existing().ownerId
+          && incoming().createdAt == existing().createdAt
+          && incoming().playCount == existing().playCount + 1
+          && incoming().lastPlayedAt == request.time
+          && incoming().diff(existing()).affectedKeys().hasOnly(['title', 'channel', 'duration', 'durationSeconds', 'thumbnail', 'playCount', 'lastPlayedAt']);
+        allow delete: if isOwner(userId) && isValidTrackId(trackId);
+      }
+
+      match /personalTracks/{trackId} {
+        allow get: if isOwner(userId) && isValidTrackId(trackId);
+        allow list: if isOwner(userId) && existing().ownerId == request.auth.uid;
+        allow create: if isOwner(userId)
+          && isValidTrackId(trackId)
+          && isValidPersonalTrack(incoming(), userId, trackId)
+          && incoming().createdAt == request.time;
+        allow update: if isOwner(userId)
+          && isValidTrackId(trackId)
+          && isValidPersonalTrack(incoming(), userId, trackId)
+          && incoming().id == existing().id
+          && incoming().ownerId == existing().ownerId
+          && incoming().source == existing().source
+          && incoming().fileName == existing().fileName
+          && incoming().fileSize == existing().fileSize
+          && incoming().createdAt == existing().createdAt
+          && incoming().diff(existing()).affectedKeys().hasOnly(['title', 'channel']);
+        allow delete: if isOwner(userId) && isValidTrackId(trackId);
+      }
+    }
+  }
+}

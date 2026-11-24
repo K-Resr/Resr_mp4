@@ -1,0 +1,389 @@
+{
+  "entities": {
+    "UserSettings": {
+      "title": "UserSettings",
+      "description": "User playback preferences and profile display metadata scoped to the authenticated owner.",
+      "type": "object",
+      "properties": {
+        "uid": {
+          "type": "string",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "displayName": {
+          "type": "string",
+          "maxLength": 120
+        },
+        "repeatMode": {
+          "type": "string",
+          "enum": ["off", "all", "one"]
+        },
+        "isShuffle": {
+          "type": "boolean"
+        },
+        "backgroundKeepAlive": {
+          "type": "boolean"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["uid", "repeatMode", "isShuffle", "backgroundKeepAlive", "createdAt", "updatedAt"]
+    },
+    "LikedTrack": {
+      "title": "LikedTrack",
+      "description": "A YouTube music track or trimmed clip entry saved in a user's liked library.",
+      "type": "object",
+      "properties": {
+        "entryId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "ownerId": {
+          "type": "string",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "title": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 300
+        },
+        "channel": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 150
+        },
+        "duration": {
+          "type": "string",
+          "maxLength": 20
+        },
+        "durationSeconds": {
+          "type": "number"
+        },
+        "thumbnail": {
+          "type": "string",
+          "maxLength": 500
+        },
+        "viewCountText": {
+          "type": "string",
+          "maxLength": 60
+        },
+        "startSeconds": {
+          "type": "number"
+        },
+        "endSeconds": {
+          "type": "number"
+        },
+        "clipLabel": {
+          "type": "string",
+          "maxLength": 80
+        },
+        "source": {
+          "type": "string",
+          "enum": ["youtube", "local"]
+        },
+        "addedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["entryId", "id", "ownerId", "title", "channel", "duration", "durationSeconds", "thumbnail", "addedAt"]
+    },
+    "Playlist": {
+      "title": "Playlist",
+      "description": "A user-created music playlist.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "ownerId": {
+          "type": "string",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 100
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["id", "ownerId", "name", "createdAt", "updatedAt"]
+    },
+    "PlaylistTrack": {
+      "title": "PlaylistTrack",
+      "description": "A YouTube track or trimmed segment entry inside a user's custom playlist. Supports adding the same song multiple times.",
+      "type": "object",
+      "properties": {
+        "entryId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "ownerId": {
+          "type": "string",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "playlistId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "title": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 300
+        },
+        "channel": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 150
+        },
+        "duration": {
+          "type": "string",
+          "maxLength": 20
+        },
+        "durationSeconds": {
+          "type": "number"
+        },
+        "thumbnail": {
+          "type": "string",
+          "maxLength": 500
+        },
+        "viewCountText": {
+          "type": "string",
+          "maxLength": 60
+        },
+        "startSeconds": {
+          "type": "number"
+        },
+        "endSeconds": {
+          "type": "number"
+        },
+        "clipLabel": {
+          "type": "string",
+          "maxLength": 80
+        },
+        "source": {
+          "type": "string",
+          "enum": ["youtube", "local"]
+        },
+        "orderIndex": {
+          "type": "number"
+        },
+        "addedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["entryId", "id", "ownerId", "playlistId", "title", "channel", "duration", "durationSeconds", "thumbnail", "orderIndex", "addedAt"]
+    },
+    "SearchHistoryItem": {
+      "title": "SearchHistoryItem",
+      "description": "A user's search history entry for keyword, channel, or URL queries.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "ownerId": {
+          "type": "string",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "query": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "searchType": {
+          "type": "string",
+          "enum": ["keyword", "channel", "url"]
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["id", "ownerId", "query", "searchType", "createdAt", "updatedAt"]
+    },
+    "PlayHistoryItem": {
+      "title": "PlayHistoryItem",
+      "description": "Tracks played by an authenticated Google user inside the app, used for personalized taste analysis.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "ownerId": {
+          "type": "string",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "title": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 300
+        },
+        "channel": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 150
+        },
+        "duration": {
+          "type": "string",
+          "maxLength": 20
+        },
+        "durationSeconds": {
+          "type": "number"
+        },
+        "thumbnail": {
+          "type": "string",
+          "maxLength": 500
+        },
+        "playCount": {
+          "type": "number"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "lastPlayedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["id", "ownerId", "title", "channel", "duration", "durationSeconds", "thumbnail", "playCount", "createdAt", "lastPlayedAt"]
+    },
+    "PersonalTrack": {
+      "title": "PersonalTrack",
+      "description": "Private metadata for a user's personal local audio file track (audio binary stored privately in device IndexedDB).",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "ownerId": {
+          "type": "string",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "title": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 300
+        },
+        "channel": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 150
+        },
+        "duration": {
+          "type": "string",
+          "maxLength": 20
+        },
+        "durationSeconds": {
+          "type": "number"
+        },
+        "thumbnail": {
+          "type": "string",
+          "maxLength": 500
+        },
+        "source": {
+          "type": "string",
+          "enum": ["local"]
+        },
+        "fileName": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 260
+        },
+        "fileSize": {
+          "type": "number"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["id", "ownerId", "title", "channel", "duration", "durationSeconds", "thumbnail", "source", "fileName", "fileSize", "createdAt"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": {"$ref": "#/entities/UserSettings"},
+      "description": "Authenticated user's playback settings and display name."
+    },
+    "/users/{userId}/likedTracks/{entryId}": {
+      "schema": {"$ref": "#/entities/LikedTrack"},
+      "description": "Tracks or trimmed clips liked by the user."
+    },
+    "/users/{userId}/playlists/{playlistId}": {
+      "schema": {"$ref": "#/entities/Playlist"},
+      "description": "Custom playlists created by the user."
+    },
+    "/users/{userId}/playlists/{playlistId}/tracks/{entryId}": {
+      "schema": {"$ref": "#/entities/PlaylistTrack"},
+      "description": "Track entries (full or trimmed clips, duplicates allowed) inside a user's playlist."
+    },
+    "/users/{userId}/searchHistory/{historyId}": {
+      "schema": {"$ref": "#/entities/SearchHistoryItem"},
+      "description": "User's saved search history for keywords, channels, and links."
+    },
+    "/users/{userId}/playHistory/{trackId}": {
+      "schema": {"$ref": "#/entities/PlayHistoryItem"},
+      "description": "User's in-app playback history and frequency counts for personalized mix analysis."
+    },
+    "/users/{userId}/personalTracks/{trackId}": {
+      "schema": {"$ref": "#/entities/PersonalTrack"},
+      "description": "Strictly private personal audio file track metadata owned solely by the authenticated user."
+    }
+  }
+}
